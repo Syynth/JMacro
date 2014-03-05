@@ -1,4 +1,6 @@
-package com.syynth.jmacro;
+package com.syynth.jmacro.ui;
+
+import com.syynth.jmacro.JMacroWindow;
 
 import javax.swing.*;
 import java.awt.event.KeyEvent;
@@ -20,24 +22,26 @@ public class Editor extends JFrame {
 	private JButton saveAs;
 	private JTextArea text;
 	private JTextArea lineNumbers;
+	private String path;
 	//endregion
 
-	private String path;
+	private final JMacroWindow window;
 	private String cache;
 	private boolean changed;
 
 	private boolean saveFile() {
 		if (!changed) return true;
-		Console.log("Writing file ...");
+		com.syynth.jmacro.ui.Console.log("Writing file ...");
 		try {
 			BufferedWriter writer = new BufferedWriter(new FileWriter(new File(path)));
 			writer.write(text.getText());
 			writer.close();
 			cache = text.getText();
-			Console.log("Write successful");
+			com.syynth.jmacro.ui.Console.log("Write successful");
+			window.updatePreview(true);
 			return true;
 		} catch (IOException e) {
-			Console.error("Write failure");
+			com.syynth.jmacro.ui.Console.error("Write failure");
 			e.printStackTrace();
 			return false;
 		}
@@ -55,11 +59,11 @@ public class Editor extends JFrame {
 				cache = builder.toString();
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
-				Console.error("Tried to read non-existent file: " + path);
+				com.syynth.jmacro.ui.Console.error("Tried to read non-existent file: " + path);
 				saveFile();
 			}
 		} else {
-			Console.log("Path is empty");
+			com.syynth.jmacro.ui.Console.log("Path is empty");
 		}
 		updateLines();
 		return this;
@@ -85,7 +89,8 @@ public class Editor extends JFrame {
 		lineNumbers.setText(builder.toString());
 	}
 
-	public Editor(String path) {
+	public Editor(String path, JMacroWindow window) {
+		this.window = window;
 		this.path = path;
 		this.cache = "";
 		this.changed = false;

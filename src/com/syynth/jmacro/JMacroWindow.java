@@ -3,20 +3,28 @@ package com.syynth.jmacro;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import de.javasoft.plaf.synthetica.*;
+import com.syynth.jmacro.data.DataManager;
+import com.syynth.jmacro.input.GlobalKeyListener;
+import com.syynth.jmacro.ui.Console;
+import com.syynth.jmacro.ui.Editor;
+import org.jnativehook.GlobalScreen;
+import org.jnativehook.NativeHookException;
 
-import java.text.ParseException;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 
 /**
- * @author bcochrane
+ * @author syynth
  * @since 3/4/14
  */
 public class JMacroWindow {
 
-	public static final String VERSION = "0.1";
+	public static final String VERSION = "0.5.0";
+	private GlobalKeyListener keyListener;
+	private DataManager dataManager;
 
 	//region Private UI Fields
-	private JButton resetButton;
+	private JButton reset;
 	private JTextField dataPreview;
 	private JButton selectData;
 	private JButton editData;
@@ -25,21 +33,30 @@ public class JMacroWindow {
 	private JButton selectScript;
 	private JButton editScript;
 	private JButton createScript;
-	private JButton previousButton;
-	private JButton nextButton;
-	private JTextField currentDataPreview;
-	private JButton infoButton;
-	private JButton startButton;
+	private JButton previous;
+	private JButton next;
+	private JTextField item;
+	private JButton info;
+	private JButton start;
 	private JPanel rootPanel;
 	private JButton showConsole;
-	private JRadioButton continuousRadioButton;
-	private JRadioButton singleInsertRadioButton;
+	private JRadioButton continuousMode;
+	private JRadioButton singleInsertMode;
+	private JLabel progress;
 	//endregion
 
 	public JMacroWindow() {
-		showConsole.addActionListener(e -> Console.start());
+		showConsole.addActionListener(e -> {
+			if (showConsole.getText().equals("Show Log")) {
+				Console.start();
+				showConsole.setText("Hide Log");
+			} else {
+				Console.stop();
+				showConsole.setText("Show Log");
+			}
+		});
 		editData.addActionListener(e -> { if (!"".equals(dataPreview.getText())) editFile(dataPreview.getText()); });
-		selectData.addActionListener(e -> selectFile(dataPreview, "CSV Files", "csv", JFileChooser.OPEN_DIALOG));
+		selectData.addActionListener(e -> selectFile(dataPreview, "CSV Files", "csv", JFileChooser.OPEN_DIALOG).updatePreview(true));
 		createData.addActionListener(e -> {
 			selectFile(dataPreview, "CSV Files", "csv", JFileChooser.SAVE_DIALOG);
 			if (!"".equals(dataPreview.getText())) editFile(dataPreview.getText());
@@ -50,6 +67,16 @@ public class JMacroWindow {
 			selectFile(scriptPreview, "Macro Files", "mfl", JFileChooser.SAVE_DIALOG);
 			if (!"".equals(scriptPreview.getText())) editFile(scriptPreview.getText());
 		});
+		try {
+			GlobalScreen.registerNativeHook();
+		} catch (NativeHookException e) {
+			e.printStackTrace();
+			Console.start();
+			Console.error("Unable to gain native access to the keyboard. Please restart JMacro");
+		}
+		next.addActionListener(e -> increment(true));
+		previous.addActionListener(e -> increment(false));
+		keyListener = new GlobalKeyListener();
 	}
 
 	private JMacroWindow selectFile(JTextField btn, String description, String extension, int type) {
@@ -59,16 +86,16 @@ public class JMacroWindow {
 
 	private JMacroWindow editFile(String path) {
 		Console.log("Opening file " + path);
-		new Editor(path);
+		new Editor(path, this);
 		return this;
 	}
 
-	private String browse(String description, String extension, int save) {
+	public String browse(String description, String extension, int save) {
 		JFileChooser f = new JFileChooser(System.getProperty("user.dir"));
 		f.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		f.setFileFilter(new FileNameExtensionFilter(description, extension));
 		f.setDialogType(save);
-		f.showDialog(f, "JyMacro - " + VERSION);
+		f.showDialog(f, stringName(save));
 		if (f.getSelectedFile() != null) {
 			if (save == JFileChooser.SAVE_DIALOG && !f.getSelectedFile().toString().endsWith("." + extension)) {
 				Console.log("Selected file " + f.getSelectedFile().toString() + "." + extension);
@@ -78,6 +105,36 @@ public class JMacroWindow {
 			return f.getSelectedFile().toString();
 		}
 		return "";
+	}
+
+	public JMacroWindow updatePreview(boolean reload) {
+		if (!"".equals(dataPreview.getText())) {
+			if (dataManager == null || reload) {
+				String path = dataPreview.getText();
+				dataManager = new DataManager(path);
+			}
+			item.setText(dataManager.current());
+			progress.setText("[" + dataManager.getCurrentIndex() + "/" + dataManager.size() + "]");
+		}
+		return this;
+	}
+
+	private JMacroWindow increment(boolean sign) {
+		if (dataManager != null) {
+			if (sign) {
+				dataManager.next();
+			} else {
+				dataManager.previous();
+			}
+			updatePreview(false);
+		}
+		return this;
+	}
+
+	private String stringName(int type) {
+		if (type == JFileChooser.SAVE_DIALOG) return "Save";
+		if (type == JFileChooser.OPEN_DIALOG) return "Open";
+		return "JMacro - " + VERSION;
 	}
 
 	public static void main(String[] args) {
@@ -91,6 +148,14 @@ public class JMacroWindow {
 		frame.pack();
 		frame.setVisible(true);
 		frame.setLocationRelativeTo(null);
+		frame.addWindowListener(new WindowListener() {
+			@Override public void windowIconified(WindowEvent e) {} @Override public void windowDeiconified(WindowEvent e) {}
+			@Override public void windowActivated(WindowEvent e) {} @Override public void windowDeactivated(WindowEvent e) {}
+			@Override public void windowOpened(WindowEvent e) {} @Override public void windowClosing(WindowEvent e) {}
+			@Override	public void windowClosed(WindowEvent e) {
+				GlobalScreen.unregisterNativeHook();
+			}
+		});
 	}
 
 }

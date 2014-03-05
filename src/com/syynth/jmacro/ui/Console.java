@@ -1,15 +1,13 @@
-package com.syynth.jmacro;
+package com.syynth.jmacro.ui;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
- * @author bcochrane
+ * @author syynth
  * @since 3/5/14
  */
 public class Console extends JFrame {
@@ -31,12 +29,12 @@ public class Console extends JFrame {
 
 	public static void log(String message) {
 		messages.add(makeLabel(message, Color.black));
-		console.updateUI();
+		if (console != null) console.updateUI();
 	}
 
 	public static void error(String message) {
 		messages.add(makeLabel(message, Color.red));
-		console.updateUI();
+		if (console != null) 		console.updateUI();
 	}
 
 	public static void start() {
@@ -44,6 +42,7 @@ public class Console extends JFrame {
 	}
 
 	public static void stop() {
+		console.dispose();
 		console = null;
 	}
 
