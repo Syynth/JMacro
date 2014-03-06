@@ -8,4 +8,9 @@ public final class Commands {
 
 	private Commands() {}
 
+	public static Command getCommand(String commandText) {
+
+		return null;
+	}
+
 }

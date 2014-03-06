@@ -5,6 +5,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.syynth.jmacro.data.DataManager;
 import com.syynth.jmacro.input.GlobalKeyListener;
+import com.syynth.jmacro.macro.MacroManager;
 import com.syynth.jmacro.ui.Console;
 import com.syynth.jmacro.ui.Editor;
 import org.jnativehook.GlobalScreen;
@@ -43,6 +44,7 @@ public class JMacroWindow {
 	private JRadioButton continuousMode;
 	private JRadioButton singleInsertMode;
 	private JLabel progress;
+	private MacroManager macroManager;
 	//endregion
 
 	public JMacroWindow() {
@@ -62,7 +64,7 @@ public class JMacroWindow {
 			if (!"".equals(dataPreview.getText())) editFile(dataPreview.getText());
 		});
 		editScript.addActionListener(e -> { if (!"".equals(scriptPreview.getText())) editFile(scriptPreview.getText()); });
-		selectScript.addActionListener(e -> selectFile(scriptPreview, "Macro Files", "mfl", JFileChooser.OPEN_DIALOG));
+		selectScript.addActionListener(e -> selectFile(scriptPreview, "Macro Files", "mfl", JFileChooser.OPEN_DIALOG).parseScript());
 		createScript.addActionListener(e -> {
 			selectFile(scriptPreview, "Macro Files", "mfl", JFileChooser.SAVE_DIALOG);
 			if (!"".equals(scriptPreview.getText())) editFile(scriptPreview.getText());
@@ -115,6 +117,14 @@ public class JMacroWindow {
 			}
 			item.setText(dataManager.current());
 			progress.setText("[" + dataManager.getCurrentIndex() + "/" + dataManager.size() + "]");
+		}
+		return this;
+	}
+
+	public JMacroWindow parseScript() {
+		if (!"".equals(scriptPreview.getText())) {
+			String path = scriptPreview.getText();
+			macroManager = new MacroManager(path);
 		}
 		return this;
 	}
