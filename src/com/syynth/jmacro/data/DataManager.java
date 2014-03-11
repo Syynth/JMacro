@@ -46,12 +46,16 @@ public class DataManager {
 	}
 
 	public void next() {
-		wrap(++currentIndex);
+		clamp(++currentIndex);
 	}
 
 	public int getCurrentIndex() {
 		if (models.size() > 0) return currentIndex + 1;
 		return currentIndex;
+	}
+
+	public void setCurrentIndex(int currentIndex) {
+		clamp(currentIndex);
 	}
 
 	public String current() {
@@ -60,10 +64,10 @@ public class DataManager {
 	}
 
 	public void previous() {
-		wrap(--currentIndex);
+		clamp(--currentIndex);
 	}
 
-	private void wrap(int index) {
+	private void clamp(int index) {
 		currentIndex = Math.max(0, Math.min(index, size() - 1));
 	}
 }

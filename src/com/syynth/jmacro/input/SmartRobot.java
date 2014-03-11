@@ -10,7 +10,8 @@ public interface SmartRobot {
 	public void move(int x, int y);
 	public void scroll(int delta);
 	public void type(String text);
-	public void press(String text);
-	public void release(String text);
+	public void type(int key);
+	public void press(int key);
+	public void release(int key);
 
 }

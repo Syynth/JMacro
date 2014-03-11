@@ -20,13 +20,26 @@ public class MacroManager {
 	private File file;
 	private int currentIndex;
 	private HashMap<String, ArrayList<Command>> commandSets;
+	private HashMap<String, String> state;
+	private boolean running;
+	private RunModes mode;
 
 	public MacroManager(String path) {
 		commands = new ArrayList<>();
 		commandSets = new HashMap<>();
+		state = new HashMap<>();
 		file = new File(path);
 		currentIndex = 0;
 		parse();
+	}
+
+	public void run(RunModes mode) {
+		this.mode = mode;
+		running = true;
+	}
+
+	public void stop() {
+		running = false;
 	}
 
 	public void parse() {
@@ -68,6 +81,26 @@ public class MacroManager {
 			Console.log(msg);
 			commandSet.add(Commands.getCommand(msg));
 		}
+		commandSets.put(tagName, commandSet);
 	}
 
+	public void executeCommandSet(String set) {
+
+	}
+
+	public String getStateProperty(String name) {
+		if (state.containsKey(name)) {
+			return state.get(name);
+		}
+		return name;
+	}
+
+	public String setStateProperty(String name, String value) {
+		state.put(name, value);
+		return value;
+	}
+
+	public void stopCommandSet() {
+
+	}
 }

@@ -85,12 +85,18 @@ class AwtSmartRobot extends Robot implements SmartRobot {
 	}
 
 	@Override
-	public void press(String text) {
-
+	public void type(int key) {
+		press(key);
+		release(key);
 	}
 
 	@Override
-	public void release(String text) {
+	public void press(int key) {
+		super.keyPress(key);
+	}
 
+	@Override
+	public void release(int key) {
+		super.keyRelease(key);
 	}
 }

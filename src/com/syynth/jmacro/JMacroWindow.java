@@ -6,11 +6,13 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import com.syynth.jmacro.data.DataManager;
 import com.syynth.jmacro.input.GlobalKeyListener;
 import com.syynth.jmacro.macro.MacroManager;
+import com.syynth.jmacro.macro.RunModes;
 import com.syynth.jmacro.ui.Console;
 import com.syynth.jmacro.ui.Editor;
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
 
+import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
@@ -23,6 +25,9 @@ public class JMacroWindow {
 	public static final String VERSION = "0.5.0";
 	private GlobalKeyListener keyListener;
 	private DataManager dataManager;
+	private MacroManager macroManager;
+	private RunModes mode;
+	private Color color;
 
 	//region Private UI Fields
 	private JButton reset;
@@ -44,10 +49,11 @@ public class JMacroWindow {
 	private JRadioButton continuousMode;
 	private JRadioButton singleInsertMode;
 	private JLabel progress;
-	private MacroManager macroManager;
+	private JPanel panel;
 	//endregion
 
 	public JMacroWindow() {
+		mode = RunModes.Continuous;
 		showConsole.addActionListener(e -> {
 			if (showConsole.getText().equals("Show Log")) {
 				Console.start();
@@ -79,6 +85,25 @@ public class JMacroWindow {
 		next.addActionListener(e -> increment(true));
 		previous.addActionListener(e -> increment(false));
 		keyListener = new GlobalKeyListener();
+		start.addActionListener(e -> startMacro());
+		continuousMode.addActionListener(e -> mode = RunModes.Continuous);
+		singleInsertMode.addActionListener(e -> mode = RunModes.Discrete);
+	}
+
+	private JMacroWindow startMacro() {
+		keyListener.addF5Listener(e -> { if (macroManager != null) macroManager.run(mode); });
+		keyListener.addF6Listener(e -> { keyListener.clearListeners(); macroManager.stop(); clearReady();});
+		getReady();
+		return this;
+	}
+
+	private void clearReady() {
+		panel.setBackground(color);
+	}
+
+	private void getReady() {
+		color = panel.getBackground();
+		panel.setForeground(Color.red);
 	}
 
 	private JMacroWindow selectFile(JTextField btn, String description, String extension, int type) {
