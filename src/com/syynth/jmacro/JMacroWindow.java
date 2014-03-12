@@ -13,6 +13,8 @@ import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
 
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
@@ -50,6 +52,11 @@ public class JMacroWindow {
 	private JRadioButton singleInsertMode;
 	private JLabel progress;
 	private JPanel panel;
+	private JPanel dataButtonPanel;
+	private JPanel scriptButtonPanel;
+	private JPanel startButtonPanel;
+	private JPanel previewPanel;
+	private JPanel modePanel;
 	//endregion
 
 	public JMacroWindow() {
@@ -85,25 +92,58 @@ public class JMacroWindow {
 		next.addActionListener(e -> increment(true));
 		previous.addActionListener(e -> increment(false));
 		keyListener = new GlobalKeyListener();
+		GlobalScreen.getInstance().addNativeKeyListener(keyListener);
 		start.addActionListener(e -> startMacro());
 		continuousMode.addActionListener(e -> mode = RunModes.Continuous);
 		singleInsertMode.addActionListener(e -> mode = RunModes.Discrete);
+		progress.addMouseListener(new MouseListener() {
+			@Override public void mouseClicked(MouseEvent e) {
+				selectDataPosition();
+			} @Override public void mousePressed(MouseEvent e) {} @Override public void mouseReleased(MouseEvent e) {}
+			@Override public void mouseEntered(MouseEvent e) {} @Override public void mouseExited(MouseEvent e) {}
+		});
+	}
+
+	private void selectDataPosition() {
+		if (dataManager != null) {
+			String res = JOptionPane.showInputDialog(rootPanel, "Please enter the record you would like to select.");
+			try {
+				int r = Integer.parseInt(res);
+				dataManager.setCurrentIndex(r - 1);
+				updatePreview(false);
+			} catch (Exception e) {
+				Console.error("Cast failed!");
+			}
+		}
 	}
 
 	private JMacroWindow startMacro() {
 		keyListener.addF5Listener(e -> { if (macroManager != null) macroManager.run(mode); });
-		keyListener.addF6Listener(e -> { keyListener.clearListeners(); macroManager.stop(); clearReady();});
+		keyListener.addF6Listener(e -> { keyListener.clearListeners(); if (macroManager != null) macroManager.stop(); clearReady();});
 		getReady();
 		return this;
 	}
 
 	private void clearReady() {
-		panel.setBackground(color);
+		JComponent[] comps = {panel, showConsole, dataButtonPanel, scriptButtonPanel, previewPanel, modePanel, reset,
+			selectData, selectScript, editData, editScript, createData, createScript, start, info, next, previous,
+			continuousMode, singleInsertMode, startButtonPanel};
+		for (JComponent component : comps) {
+			component.setBackground(color);
+		}
+		rootPanel.repaint();
 	}
 
 	private void getReady() {
 		color = panel.getBackground();
-		panel.setForeground(Color.red);
+		Color red = new Color(222, 64, 64);
+		JComponent[] comps = {panel, showConsole, dataButtonPanel, scriptButtonPanel, previewPanel, modePanel, reset,
+			selectData, selectScript, editData, editScript, createData, createScript, start, info, next, previous,
+			continuousMode, singleInsertMode, startButtonPanel};
+		for (JComponent component : comps) {
+			component.setBackground(red);
+		}
+		rootPanel.repaint();
 	}
 
 	private JMacroWindow selectFile(JTextField btn, String description, String extension, int type) {
